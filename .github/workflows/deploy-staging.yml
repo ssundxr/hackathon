@@ -17,9 +17,9 @@ jobs:
       - name: SSH and Deploy to Staging
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.STAGING_EC2_HOST }}
-          username: ${{ secrets.STAGING_EC2_USERNAME }}
-          key: ${{ secrets.STAGING_EC2_SSH_KEY }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             echo "--- Starting Staging Deployment ---"
             
