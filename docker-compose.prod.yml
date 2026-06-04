@@ -3,14 +3,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
-      - ENV=development
-      - DEBUG=true
-    volumes:
-      - ./backend:/app
-    restart: unless-stopped
+      - ENV=production
+      - DEBUG=false
+    restart: always
 
   frontend:
     build:
@@ -18,6 +16,9 @@ services:
       dockerfile: frontend/Dockerfile
     ports:
       - "80:80"
+      - "443:443"
+    # volumes:
+    #   - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
-    restart: unless-stopped
+    restart: always

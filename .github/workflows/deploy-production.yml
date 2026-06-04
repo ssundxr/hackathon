@@ -1,0 +1,89 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Run Production Pre-checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies & Run Pytest
+        run: |
+          pip install -r backend/requirements.txt
+          cd backend
+          python -m pytest
+
+  deploy:
+    name: Deploy to Production EC2
+    needs: validate
+    runs-on: ubuntu-latest
+    # This environments tag activates the manual approval gate in GitHub Settings
+    environment: production
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: SSH and Deploy to Production
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_EC2_HOST }}
+          username: ${{ secrets.PROD_EC2_USERNAME }}
+          key: ${{ secrets.PROD_EC2_SSH_KEY }}
+          script: |
+            echo "--- Starting Production Deployment ---"
+            
+            # Install Docker & Docker Compose if missing
+            if ! command -v docker &> /dev/null; then
+              echo "Installing Docker..."
+              sudo apt-get update
+              sudo apt-get install -y docker.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker $USER
+            fi
+            
+            if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+              echo "Installing Docker Compose..."
+              sudo apt-get install -y docker-compose-plugin
+            fi
+            
+            # Setup repository directory
+            PROJECT_DIR="$HOME/hackathon-production"
+            if [ ! -d "$PROJECT_DIR/.git" ]; then
+              echo "Cloning production repository..."
+              rm -rf "$PROJECT_DIR"
+              git clone https://github.com/ssundxr/hackathon.git "$PROJECT_DIR"
+            fi
+            
+            cd "$PROJECT_DIR"
+            
+            echo "Fetching latest changes..."
+            git fetch --all
+            git reset --hard origin/main
+            
+            echo "Running Docker Compose (Production)..."
+            # Stop existing host Nginx to free port 80 if running
+            if systemctl is-active --quiet nginx; then
+              echo "Stopping host nginx to free port 80..."
+              sudo systemctl stop nginx
+              sudo systemctl disable nginx
+            fi
+            
+            sudo docker compose -f docker-compose.prod.yml down
+            sudo docker compose -f docker-compose.prod.yml up --build -d
+            
+            echo "--- Production Deployment Finished Successfully! ---"

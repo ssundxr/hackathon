@@ -3,14 +3,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
-      - ENV=development
+      - ENV=staging
       - DEBUG=true
-    volumes:
-      - ./backend:/app
-    restart: unless-stopped
+    restart: always
 
   frontend:
     build:
@@ -20,4 +18,4 @@ services:
       - "80:80"
     depends_on:
       - backend
-    restart: unless-stopped
+    restart: always
