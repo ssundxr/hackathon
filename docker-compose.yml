@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:8000"
+    restart: always
+    environment:
+      - ENV=production
+      # - GEMINI_API_KEY=your_key_here
+      # - OPENAI_API_KEY=your_key_here

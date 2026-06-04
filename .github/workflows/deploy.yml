@@ -1,0 +1,64 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Deploy to EC2 using SSH and run deploy script
+      - name: SSH and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "--- Starting Deployment Process ---"
+            
+            # Install Docker & Docker Compose if missing
+            if ! command -v docker &> /dev/null; then
+              echo "Installing Docker..."
+              sudo apt-get update
+              sudo apt-get install -y docker.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker $USER
+            fi
+            
+            if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+              echo "Installing Docker Compose..."
+              sudo apt-get install -y docker-compose-plugin
+            fi
+            
+            # Setup repository directory
+            PROJECT_DIR="$HOME/hackathon"
+            if [ ! -d "$PROJECT_DIR/.git" ]; then
+              echo "Cloning repository..."
+              rm -rf "$PROJECT_DIR"
+              git clone https://github.com/ssundxr/hackathon.git "$PROJECT_DIR"
+            fi
+            
+            cd "$PROJECT_DIR"
+            
+            echo "Fetching latest changes..."
+            git fetch --all
+            # Hard reset to match the remote branch (main or master)
+            git reset --hard origin/main || git reset --hard origin/master
+            
+            echo "Running Docker Compose..."
+            # Rebuild and run containers in background
+            sudo docker compose down
+            sudo docker compose up --build -d
+            
+            echo "--- Deployment Finished Successfully! ---"
