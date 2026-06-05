@@ -39,10 +39,13 @@ jobs:
 
       - name: SSH and Deploy to Production
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: GEMINI_API_KEY
           script: |
             echo "--- Starting Production Deployment ---"
             
@@ -74,6 +77,9 @@ jobs:
             echo "Fetching latest changes..."
             git fetch --all
             git reset --hard origin/main
+            
+            # Write environment secrets
+            echo "GEMINI_API_KEY=$GEMINI_API_KEY" > .env
             
             echo "Running Docker Compose (Production)..."
             # Stop existing host Nginx to free port 80 if running

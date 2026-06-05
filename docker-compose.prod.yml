@@ -8,6 +8,7 @@ services:
     environment:
       - ENV=production
       - DEBUG=false
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     restart: always
 
   frontend:

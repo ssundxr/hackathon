@@ -1,23 +1,12 @@
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      - ENV=development
-      - DEBUG=true
-    volumes:
-      - ./backend:/app
-    restart: unless-stopped
-
-  frontend:
+  cvanalyzer:
     build:
       context: .
-      dockerfile: frontend/Dockerfile
+      dockerfile: Dockerfile
     ports:
-      - "80:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
+      - "80:8000"
+    environment:
+      - ENV=production
+      - DEBUG=false
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    restart: always

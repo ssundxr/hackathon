@@ -1,23 +1,13 @@
 services:
-  backend:
+  cvanalyzer:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    expose:
-      - "8000"
+    ports:
+      - "80:8000"
+      - "8080:8000"
     environment:
       - ENV=staging
       - DEBUG=true
-    restart: always
-
-  frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-    ports:
-      - "8080:80"
-    volumes:
-      - ./nginx/staging.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - backend
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     restart: always
