@@ -66,7 +66,7 @@ jobs:
               sudo systemctl disable nginx
             fi
             
-            sudo docker compose -f docker-compose.staging.yml down
+            sudo docker compose -f docker-compose.staging.yml down --remove-orphans
             sudo docker compose -f docker-compose.staging.yml up --build -d
             
             echo "--- Staging Deployment Finished Successfully! ---"

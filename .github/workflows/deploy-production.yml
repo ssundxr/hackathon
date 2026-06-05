@@ -89,7 +89,7 @@ jobs:
               sudo systemctl disable nginx
             fi
             
-            sudo docker compose -f docker-compose.prod.yml down
+            sudo docker compose -f docker-compose.prod.yml down --remove-orphans
             sudo docker compose -f docker-compose.prod.yml up --build -d
             
             echo "--- Production Deployment Finished Successfully! ---"
